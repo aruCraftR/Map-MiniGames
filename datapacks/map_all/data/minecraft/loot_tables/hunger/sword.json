@@ -231,13 +231,13 @@
                 },
                 {
                     "type": "item",
-                    "name": "stick",
+                    "name": "slime_ball",
                     "weight": 3,
                     "quality": 3,
                     "functions": [
                         {
                             "function": "minecraft:set_nbt",
-                            "tag": "{display:{Name:'\"§f击退棍\"'},Enchantments:[{id:\"knockback\",lvl:2}]}"
+                            "tag": "{display:{Name:'\"§f击退球\"'},Enchantments:[{id:\"knockback\",lvl:2}]}"
                         }
                     ]
                 },

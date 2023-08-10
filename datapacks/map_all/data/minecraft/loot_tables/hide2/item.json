@@ -218,11 +218,11 @@
             "entries": [
                 {
                     "type": "minecraft:item",
-                    "name": "minecraft:stick",
+                    "name": "minecraft:slime_ball",
                     "functions": [
                         {
                             "function": "minecraft:set_nbt",
-                            "tag": "{Enchantments:[{id:\"knockback\",lvl:2b}],display:{Name:'\"\\\\u00a7a击退棍\"',Lore:['\"\\\\u00a7eKnockback LV.2\"']},HideFlag:63}"
+                            "tag": "{Enchantments:[{id:\"knockback\",lvl:2b}],display:{Name:'\"\\\\u00a7a击退球\"',Lore:['\"\\\\u00a7eKnockback LV.2\"']},HideFlag:63}"
                         }
                     ]
                 }

@@ -1,7 +1,7 @@
 advancement revoke @s only player_hit_ball
 
 scoreboard players set golf.scb.tmp board 5
-execute if data entity @s {SelectedItem:{id:"minecraft:stick"}} run scoreboard players set golf.scb.tmp board 5
+execute if data entity @s {SelectedItem:{id:"minecraft:slime_ball"}} run scoreboard players set golf.scb.tmp board 5
 execute if data entity @s {SelectedItem:{id:"minecraft:wooden_shovel"}} run scoreboard players set golf.scb.tmp board 10
 execute if data entity @s {SelectedItem:{id:"minecraft:stone_shovel"}} run scoreboard players set golf.scb.tmp board 15
 execute if data entity @s {SelectedItem:{id:"minecraft:golden_shovel"}} run scoreboard players set golf.scb.tmp board 20

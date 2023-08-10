@@ -87,7 +87,7 @@ execute as @s store success score @s bw.board run clear @s water_bucket{shop:-21
 execute as @s if score @s bw.board matches 1.. run tag @s add bw.buy.-21
 
 scoreboard players reset @s bw.board
-execute as @s store success score @s bw.board run clear @s stick{shop:-22}
+execute as @s store success score @s bw.board run clear @s slime_ball{shop:-22}
 execute as @s if score @s bw.board matches 1.. run tag @s add bw.buy.-22
 
 scoreboard players reset @s bw.board
