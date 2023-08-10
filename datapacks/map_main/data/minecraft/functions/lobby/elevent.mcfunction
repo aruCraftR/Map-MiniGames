@@ -56,7 +56,7 @@ tag @a[tag=NEWENTER1] remove bw.play
 tag @a[tag=NEWENTER1] remove bw.player
 tag @a[tag=NEWENTER1] remove boat.notinboats
 tag @a[tag=NEWENTER1] remove play.total
-execute as @a[tag=NEWENTER1] run function lobby/oneword
+# execute as @a[tag=NEWENTER1] run function lobby/oneword
 tag @a[tag=NEWENTER1] remove NEWENTER1
 
 ## Repeling War
