@@ -29,8 +29,10 @@ def input_nbs_file() -> pynbs.File:
         file = input('请选择需要转换的一个NBS文件(.nbs): ')
         if not isfile(file):
             print('文件不存在!')
-        elif file.endswith(NBS_FILE_SUFFIX):
+            continue
+        elif not file.endswith(NBS_FILE_SUFFIX):
             print('文件不为NBS文件')
+            continue
         try:
             return pynbs.read(file)
         except Exception:
