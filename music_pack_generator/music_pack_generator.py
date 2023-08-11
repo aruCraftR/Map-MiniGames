@@ -3,13 +3,13 @@ from os.path import isfile, join, isdir
 from sys import exit
 from os import system
 from traceback import print_exc
-from typing import Callable, Iterable, NamedTuple, Optional
+from typing import Callable, Iterable, NamedTuple, Optional, Sequence
 import pynbs
 
 
 NBS_FILE_SUFFIX = '.nbs'
 SOUND_ID_PREFFIX = 'minecraft:block.note_block.'
-HARDCORED_HARP_CMD_FORMAT = 'execute as @s run playsound {sound_id} voice @s ~ ~ ~ 1 {pitch} 1'
+HARDCORED_HARP_CMD_FORMAT = 'execute as @s run playsound {sound_id} voice @s ~ ~ ~ {volume} {pitch} {volume}'
 HARDCORED_MUSIC_CMD_FORMAT = 'execute as @s[scores=<time={tick}>] run function minecraft:{tone}'
 OCTAVE = ('f{}sharp', 'g{}', 'g{}sharp', 'a{}', 'a{}sharp', 'b{}', 'c{}', 'c{}sharp', 'd{}', 'd{}sharp', 'e{}', 'f{}')
 ROUND = 100
@@ -72,6 +72,7 @@ class ToneConversionSettings(NamedTuple):
     sounds: Iterable[str]
     key_range: tuple[int, int]  # 闭区间
     key_offset: int
+    volume: Optional[Iterable[float]] = None
 
 
 tone_cmd_generator_mapping: dict[int, list['ToneCmdGenerator']] = {}
@@ -80,7 +81,7 @@ tone_cmd_generator_mapping: dict[int, list['ToneCmdGenerator']] = {}
 class ToneCmdGenerator(Enum):   # 可添加预设以生成其他音色的转换规则
     bass_harp = ToneConversionSettings(0, ('bass',), (9, 32), 9)
     normal_harp = ToneConversionSettings(0, ('harp',), (33, 57), 33)
-    treble_harp = ToneConversionSettings(0, ('chime', 'bell'), (58, 81), 57)
+    treble_harp = ToneConversionSettings(0, ('chime', 'bell'), (58, 81), 57, (0.84, 0.80))
 
     @staticmethod
     def get_generator(instrument: int, mixed_key: int):
@@ -98,10 +99,21 @@ class ToneCmdGenerator(Enum):   # 可添加预设以生成其他音色的转换�
             tone_cmd_generator_mapping[cs.instrument_number] = []
         tone_cmd_generator_mapping[cs.instrument_number].append(self)
         self.sounds = [f'{SOUND_ID_PREFFIX}{i}' for i in cs.sounds]
+        self.check_settings()
+
+    def check_settings(self):
+        cs = self.value
+        if cs.volume is not None and (len(cs.sounds) != len(cs.volume)):
+            print(f'ToneConversionSettings设置有误: {cs.sounds} 与 {cs.volume} 无法对应')
+            system('pause')
+            exit()
 
     def get_cmds(self, mixed_key: int) -> list[str]:
         pitch = calc_pitch(self.get_relative_key(mixed_key))
-        return [HARDCORED_HARP_CMD_FORMAT.format(sound_id=i, pitch=pitch) for i in self.sounds]
+        if self.value.volume is None:
+            return [HARDCORED_HARP_CMD_FORMAT.format(sound_id=i, pitch=pitch, volume=1) for i in self.sounds]
+        else:
+            return [HARDCORED_HARP_CMD_FORMAT.format(sound_id=i, pitch=pitch, volume=j) for i, j in zip(self.sounds, self.value.volume, strict=True)]
 
     def get_relative_key(self, mixed_key):
         return mixed_key - self.value.key_offset
