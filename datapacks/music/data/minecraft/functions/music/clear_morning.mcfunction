@@ -679,7 +679,7 @@ execute as @s[scores={time=1826}] run function minecraft:piano/b3
 execute as @s[scores={time=1835}] run function minecraft:piano/c3
 execute as @s[scores={time=1847}] run function minecraft:piano/e5
 
-execute as @s[scores={time=1850}] run tag @s remove music.playing
-execute as @s[scores={time=1850}] run tag @s add music_kano
-execute as @s[scores={time=1850}] run tag @s remove music_clear_morning
-execute as @s[scores={time=1850}] run scoreboard players set @s time 0
+execute as @s[scores={time=1890}] run tag @s remove music.playing
+execute as @s[scores={time=1890}] run tag @s add music_constant_moderato
+execute as @s[scores={time=1890}] run tag @s remove music_clear_morning
+execute as @s[scores={time=1890}] run scoreboard players set @s time 0
