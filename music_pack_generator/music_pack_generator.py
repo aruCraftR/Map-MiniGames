@@ -10,8 +10,11 @@ import pynbs
 NBS_FILE_SUFFIX = '.nbs'
 SOUND_ID_PREFFIX = 'minecraft:block.note_block.'
 HARDCORED_HARP_CMD_FORMAT = 'execute as @s run playsound {sound_id} voice @s ~ ~ ~ 1 {pitch} 1'
-OCTAVE = ('#F', 'G', '#G', 'A', '#A', 'B', 'C', '#C', 'D', '#D', 'E', 'F')
+HARDCORED_MUSIC_CMD_FORMAT = 'execute as @s[scores=<time={tick}>] run function minecraft:{tone}'
+OCTAVE = ('f{}sharp', 'g{}', 'g{}sharp', 'a{}', 'a{}sharp', 'b{}', 'c{}', 'c{}sharp', 'd{}', 'd{}sharp', 'e{}', 'f{}')
 ROUND = 100
+MIN_KEY = 9
+MAX_KEY = 81
 """
 可用范围: key >= 9 and key <= 81
 即6个八度
@@ -125,6 +128,18 @@ def calc_stereo(layer_panning: int, note_panning: int) -> float | int:
     raise ValueError    # 此异常没有实际作用, 只是让IDE不报错
 
 
+def get_tone_mapping() -> dict[int, str]:
+    mapping = {}
+    key = 8
+    for i in range(1, 8):
+        for j in OCTAVE:
+            key += 1
+            if key > 81:
+                break
+            mapping[key] = j.format(i)
+    return mapping
+
+
 def mode1():
     """生成音高文件"""
     while True:
@@ -138,7 +153,7 @@ def mode1():
             key += 1
             if key > 81:
                 break
-            file = join(folder, f'{j}{i}.mcfunction')
+            file = join(folder, f'{j.format(i)}.mcfunction')
             if isfile(file):
                 print(f'文件{j}{i}.mcfunction已存在, 跳过保存')
                 continue
@@ -146,6 +161,22 @@ def mode1():
                 f.write('\n'.join(ToneCmdGenerator.get_generator(0, key).get_cmds(key)))
     print('完成')
     system('pause')
+
+
+def mode2():
+    tone_path = input('请输入音高文件的调用路径(如piano/tone代表使用minecraft:piano/tone/xxx调用): ')
+    tone_mapping = get_tone_mapping()
+    nbs = input_nbs_file()
+    factor = 20 / nbs.header.tempo if nbs.header.tempo != 20 else 1
+    for tick, chord in nbs:
+        for note in chord:
+            key = note.key
+            if key < MIN_KEY:
+                key = MIN_KEY
+            elif key > MAX_KEY:
+                key = MAX_KEY
+            tone = f'{tone_path}/{tone_mapping[key]}'
+            print(HARDCORED_MUSIC_CMD_FORMAT.format(tick=round(tick * factor), tone=tone).replace('<', '{').replace('>', '}'))
 
 
 if __name__ == '__main__':
@@ -156,4 +187,5 @@ if __name__ == '__main__':
             mode1()
             exit()
         case 2:
-            print('正在制作')
+            mode2()
+            exit()
