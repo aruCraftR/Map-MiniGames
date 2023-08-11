@@ -78,7 +78,7 @@ tone_cmd_generator_mapping: dict[int, list['ToneCmdGenerator']] = {}
 class ToneCmdGenerator(Enum):   # 可添加预设以生成其他音色的转换规则
     bass_harp = ToneConversionSettings(0, ('bass',), (9, 32), 9)
     normal_harp = ToneConversionSettings(0, ('harp',), (33, 57), 33)
-    treble_harp = ToneConversionSettings(0, ('chime', 'bell'), (58, 81), 58)
+    treble_harp = ToneConversionSettings(0, ('chime', 'bell'), (58, 81), 57)
 
     @staticmethod
     def get_generator(instrument: int, mixed_key: int):
