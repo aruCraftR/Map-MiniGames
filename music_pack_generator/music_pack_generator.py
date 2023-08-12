@@ -1,9 +1,11 @@
 from enum import Enum
-from os.path import isfile, join, isdir
+from fractions import Fraction
+from functools import cache
+from os.path import isfile, join, isdir, split, splitext
 from sys import exit
-from os import system
+from os import mkdir, system
 from traceback import print_exc
-from typing import Callable, Iterable, NamedTuple, Optional, Sequence
+from typing import Callable, Iterable, NamedTuple, Optional, TypeVar
 import pynbs
 
 
@@ -11,17 +13,15 @@ NBS_FILE_SUFFIX = '.nbs'
 SOUND_ID_PREFFIX = 'minecraft:block.note_block.'
 HARDCORED_HARP_CMD_FORMAT = 'execute as @s run playsound {sound_id} voice @s ~ ~ ~ {volume} {pitch} {volume}'
 HARDCORED_MUSIC_CMD_FORMAT = 'execute as @s[scores=<time={tick}>] run function minecraft:{tone}'
-OCTAVE = ('f{}sharp', 'g{}', 'g{}sharp', 'a{}', 'a{}sharp', 'b{}', 'c{}', 'c{}sharp', 'd{}', 'd{}sharp', 'e{}', 'f{}')
+OCTAVE = ('c{}', 'c{}sharp', 'd{}', 'd{}sharp', 'e{}', 'f{}', 'f{}sharp', 'g{}', 'g{}sharp', 'a{}', 'a{}sharp', 'b{}')
 ROUND = 100
-MIN_KEY = 9
-MAX_KEY = 81
 """
-可用范围: key >= 9 and key <= 81
-即6个八度
+可用范围: 0 <= key <= 87 (NBS可用范围)
 计算公式移植于ONBS
-自定义程度更高的音乐包生成器可能会单独开仓库写
 当前脚本中将存在未使用代码与大量硬编码内容
 """
+
+I = TypeVar('I', int, float)
 
 
 def input_nbs_file() -> pynbs.File:
@@ -34,7 +34,7 @@ def input_nbs_file() -> pynbs.File:
             print('文件不为NBS文件')
             continue
         try:
-            return pynbs.read(file)
+            return pynbs.read(file), file
         except Exception:
             print('读取文件时出现错误:')
             print_exc()
@@ -67,12 +67,19 @@ def get_instrument(instrument_number: int) -> Optional[str]:
     return None
 
 
+instruments_list = [
+    'harp', "bass", "basedrum", "snare", "hat", "guitar", "flute", "bell", "chime",
+    "xylophone", "iron_xylophone", "cow_bell", "didgeridoo", "bit", "banjo", "pling"
+]
+
+
 class ToneConversionSettings(NamedTuple):
-    instrument_number: int
-    sounds: Iterable[str]
-    key_range: tuple[int, int]  # 闭区间
-    key_offset: int
-    volume: Optional[Iterable[float]] = None
+    instrument_number: int                      # 乐器ID, ONBS项目代码内可找到
+                                                # https://github.com/OpenNBS/OpenNoteBlockStudio/blob/master/scripts/dat_instrument/dat_instrument.gml
+    sounds: Iterable[str]                       # 声音名称, 即mc中playsound时使用的乐器名称(没有开头的minecraft:block.note_block.)
+    key_range: tuple[int, int]                  # [0~87] 闭区间, 使规则生效的key范围, key为NBS下方midi键盘从左到右的编号
+    key_offset: int                             # [0~87] 计算音高值时需要给原始key值减去的偏移量
+    volume: Optional[Iterable[float]] = None    # [0~1] sounds中每个乐器的音量值, volume元素个数应与sounds相同, 成一一对应关系。不填则全部sounds的音量为1
 
 
 tone_cmd_generator_mapping: dict[int, list['ToneCmdGenerator']] = {}
@@ -84,13 +91,28 @@ class ToneCmdGenerator(Enum):   # 可添加预设以生成其他音色的转换�
     treble_harp = ToneConversionSettings(0, ('chime', 'bell'), (58, 81), 57, (0.84, 0.80))
 
     @staticmethod
-    def get_generator(instrument: int, mixed_key: int):
-        instruments = tone_cmd_generator_mapping[instrument]
-        for i in instruments:
+    def get_generator(instrument: int, mixed_key: int) -> Optional['ToneCmdGenerator']:
+        if instrument not in tone_cmd_generator_mapping:
+            return None
+        for i in tone_cmd_generator_mapping[instrument]:
             conversion_settings = i.value
             min_key, max_key = conversion_settings.key_range
             if min_key <= mixed_key <= max_key:
                 return i
+        return None
+
+    @staticmethod
+    def get_available_key(instrument: int, mixed_key: int, auto_offset: bool = True) -> Optional[int]:
+        if instrument not in tone_cmd_generator_mapping:
+            return None
+        boundaries: list[int] = []
+        for i in tone_cmd_generator_mapping[instrument]:
+            conversion_settings = i.value
+            min_key, max_key = conversion_settings.key_range
+            boundaries.extend(conversion_settings.key_range)
+            if min_key <= mixed_key <= max_key:
+                return mixed_key
+        return get_closest(mixed_key, boundaries)[0]
 
     def __init__(self, *conversion_settings) -> None:
         super().__init__(ToneConversionSettings(*conversion_settings))
@@ -142,15 +164,24 @@ def calc_stereo(layer_panning: int, note_panning: int) -> float | int:
     raise ValueError    # 此异常没有实际作用, 只是让IDE不报错
 
 
+class ToneMapping(dict):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+
+@cache
 def get_tone_mapping() -> dict[int, str]:
     mapping = {}
-    key = 8
-    for i in range(1, 8):
+    key = -10
+    for i in range(9):
         for j in OCTAVE:
             key += 1
-            if key > 81:
-                break
+            if key < 0:
+                continue
             mapping[key] = j.format(i)
+            if key == 87:
+                break
     return mapping
 
 
@@ -161,36 +192,55 @@ def mode1():
         if isdir(folder):
             break
         print('请选择有效的文件夹')
-    key = 8
-    for i in range(1, 8):
+    key = -10
+    for i in range(9):
         for j in OCTAVE:
             key += 1
-            if key > 81:
-                break
-            file = join(folder, f'{j.format(i)}.mcfunction')
-            if isfile(file):
-                print(f'文件{j}{i}.mcfunction已存在, 跳过保存')
+            if key < 0:
                 continue
-            with open(file, 'w') as f:
-                f.write('\n'.join(ToneCmdGenerator.get_generator(0, key).get_cmds(key)))
+            for num, ins in enumerate(instruments_list):
+                generator = ToneCmdGenerator.get_generator(num, key)
+                if generator is None:
+                    continue
+                ins_folder = join(folder, ins)
+                file = join(ins_folder, f'{j.format(i)}.mcfunction')
+                if not isdir(ins_folder):
+                    mkdir(ins_folder)
+                with open(file, 'w') as f:
+                    f.write('\n'.join(generator.get_cmds(key)))
+            if key == 87:
+                break
     print('完成')
     system('pause')
+
+
+def get_closest(number: int | float, compares: Iterable[I]) -> list[I]:
+    return sorted(compares, key=lambda c: abs(c - number))
 
 
 def mode2():
     tone_path = input('请输入音高文件的调用路径(如piano/tone代表使用minecraft:piano/tone/xxx调用): ')
     tone_mapping = get_tone_mapping()
-    nbs = input_nbs_file()
-    factor = 20 / nbs.header.tempo if nbs.header.tempo != 20 else 1
-    for tick, chord in nbs:
-        for note in chord:
-            key = note.key
-            if key < MIN_KEY:
-                key = MIN_KEY
-            elif key > MAX_KEY:
-                key = MAX_KEY
-            tone = f'{tone_path}/{tone_mapping[key]}'
-            print(HARDCORED_MUSIC_CMD_FORMAT.format(tick=round(tick * factor), tone=tone).replace('<', '{').replace('>', '}'))
+    nbs, path = input_nbs_file()
+    # 其实factor用浮点还是分数对精度影响几乎没有, 不过既然有分数可以用, 那就用分数吧
+    factor = Fraction(20, Fraction(nbs.header.tempo).limit_denominator()) if nbs.header.tempo != 20 else 1
+    print(f'时间缩放系数(计算时将使用分数以确保精确度):{float(factor)} ({factor})')
+    print(f'总tick数:{nbs.header.song_length} -> {round(factor * nbs.header.song_length)}')
+    print('正在导出文件')
+    with open(f'{join(split(path)[0], splitext(path)[0])}.mcfunction', 'w') as f:
+        for tick, chord in nbs:
+            for note in chord:
+                key = note.key
+                available_key = ToneCmdGenerator.get_available_key(note.instrument, key)
+                actual_tick=round(factor * tick)
+                if available_key is None:
+                    print(f'[没有转换规则] tick {tick} ({actual_tick}): {instruments_list[note.instrument]}')
+                    continue
+                if available_key != key:
+                    print(f'[范围外音高转换] tick {tick} ({actual_tick}): <音色: {instruments_list[note.instrument]}> {key} -> {available_key}')
+                tone = f'{tone_path}/{tone_mapping[available_key]}'
+                f.write(HARDCORED_MUSIC_CMD_FORMAT.format(tick=actual_tick, tone=tone).replace('<', '{').replace('>', '}') + '\n')
+    print('完成, 文件已保存到nbs文件同级目录中同名的.mcfunction文件中')
 
 
 if __name__ == '__main__':
