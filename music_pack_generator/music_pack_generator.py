@@ -281,12 +281,13 @@ def mode2():
             for note in chord:
                 key = note.key
                 available_key = ToneCmdGenerator.get_available_key(note.instrument, key)
+                instrument = instruments_list[note.instrument]
                 if available_key is None:
-                    print(f'[没有转换规则] tick {tick} ({actual_tick}): {instruments_list[note.instrument]}')
+                    print(f'[没有转换规则] tick {tick} ({actual_tick}): {instrument}')
                     continue
                 if available_key != key:
-                    print(f'[范围外音高转换] tick {tick} ({actual_tick}): <音色: {instruments_list[note.instrument]}> {key} -> {available_key}')
-                tone = f'{tone_path}/{tone_mapping[available_key]}'
+                    print(f'[范围外音高转换] tick {tick} ({actual_tick}): <音色: {instrument}> {key} -> {available_key}')
+                tone = f'{tone_path}/{instrument}/{tone_mapping[available_key]}'
                 f.write(HARDCORED_MUSIC_CMD_FORMAT.format(tick=actual_tick, tone=tone).replace('<', '{').replace('>', '}') + '\n')
     print('完成, 文件已保存到nbs文件同级目录中同名的.mcfunction文件中')
 
