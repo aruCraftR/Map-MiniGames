@@ -229,10 +229,10 @@ def mode2():
     print('正在导出文件')
     with open(f'{join(split(path)[0], splitext(path)[0])}.mcfunction', 'w') as f:
         for tick, chord in nbs:
+            actual_tick=round(factor * tick)
             for note in chord:
                 key = note.key
                 available_key = ToneCmdGenerator.get_available_key(note.instrument, key)
-                actual_tick=round(factor * tick)
                 if available_key is None:
                     print(f'[没有转换规则] tick {tick} ({actual_tick}): {instruments_list[note.instrument]}')
                     continue
