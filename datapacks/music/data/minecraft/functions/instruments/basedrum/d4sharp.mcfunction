@@ -1,0 +1,1 @@
+execute as @s run playsound minecraft:block.note_block.basedrum voice @s ~ ~ ~ 1 0.8408964152537145 1

@@ -1,2 +1,0 @@
-execute as @s run playsound minecraft:block.note_block.chime voice @s ~ ~ ~ 0.84 1.189207115002721 0.84
-execute as @s run playsound minecraft:block.note_block.bell voice @s ~ ~ ~ 0.8 1.189207115002721 0.8
