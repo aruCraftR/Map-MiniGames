@@ -36,9 +36,5 @@ tag @a[team=lobby] add music.playing
 tag @a[team=dropper] add music.playing
 tag @a[team=chestgame] add music.playing
 tag @a[team=parkour] add music.playing
-tag @a[tag=music.playing,team=!lobby,team=!dropper,team=!parkour,team=!chestgame] remove music_kano
-tag @a[tag=music.playing,team=!lobby,team=!dropper,team=!parkour,team=!chestgame] remove music_clear_morning
-tag @a[tag=music.playing,team=!lobby,team=!dropper,team=!parkour,team=!chestgame] remove music_constant_moderato
-tag @a[tag=music.playing,team=!lobby,team=!dropper,team=!parkour,team=!chestgame] remove music_little_stars
-tag @a[tag=music.playing,team=!lobby,team=!dropper,team=!parkour,team=!chestgame] remove music.playing
+scoreboard players set @a[tag=music.playing,team=!lobby,team=!dropper,team=!parkour,team=!chestgame] music 0
 scoreboard players reset @a[tag=!music.playing] time
