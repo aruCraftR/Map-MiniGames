@@ -290,6 +290,7 @@ def mode2():
                 tone = f'{tone_path}/{instrument}/{tone_mapping[available_key]}'
                 f.write(HARDCORED_MUSIC_CMD_FORMAT.format(tick=actual_tick, tone=tone).replace('<', '{').replace('>', '}') + '\n')
     print('完成, 文件已保存到nbs文件同级目录中同名的.mcfunction文件中')
+    system('pause')
 
 
 if __name__ == '__main__':
