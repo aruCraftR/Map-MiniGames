@@ -67,6 +67,7 @@ execute if score golf.state state matches 1.. in golfworld run function golf/tic
 execute if score boat.state state matches 1.. in boatworld2 run function boat/tick
 execute if score hunger.state state matches 1.. in hungerworld run function hunger/tick
 execute if score battle.state state matches 1.. in overworld run function battle/tick
+execute if score btw.state state matches 1.. in overworld run function boatwars/tick
 
 execute as @a[team=lobby,tag=!parkouring] at @s if block ~ ~ ~ light_weighted_pressure_plate run function npark/join
 execute as @a[team=lobby,tag=!mazing] at @s if block ~ ~ ~ warped_pressure_plate run function maze/join
@@ -78,6 +79,8 @@ effect give @a[team=chestgame] resistance 1 25 true
 execute if score chess.state state matches 1.. run function small_games/chess/tick
 
 execute as @e[tag=gun.line] at @s run function gun/main
+execute as @a[scores={use.skill=1..},team=btw.play.a] at @s run function minecraft:boatwars/usegun
+execute as @a[scores={use.skill=1..},team=btw.play.b] at @s run function minecraft:boatwars/usegun
 execute as @a[scores={use.skill=1..},level=..0,team=job_pvp] at @s run function minecraft:skills
 execute as @a[scores={use.skill=1..},team=play.tntwars] at @s run function minecraft:tntwars/tnttool
 execute as @a[scores={use.skill=1..},level=..0,team=play.live.runner] at @s run function minecraft:skills
@@ -95,7 +98,7 @@ execute in airworld as @a[gamemode=!creative,gamemode=!spectator,team=wait.sur,x
 execute as @a[scores={cooldowntime=1..},team=play.zombie] at @s run scoreboard players remove @s cooldowntime 1
 
 execute as @a[scores={use.skill=1..},team=play.zombie] at @s run scoreboard players add @s cooldowntime 0
-execute as @a[scores={use.skill=1..,cooldowntime=..0},team=play.zombie] at @s run function minecraft:guns
+execute as @a[scores={use.skill=1..,cooldowntime=..0},team=play.zombie] at @s run function minecraft:gun/guns
 scoreboard players reset @a[scores={use.skill.2=1..}] use.skill.2
 
 execute if score sur.state state matches 1.. in airworld run function surgame:tick
@@ -122,7 +125,9 @@ execute as @a[scores={use.skill=1..},level=1..,team=job_pvp] at @s run title @s 
 execute as @a[scores={use.skill=1..},level=1..,team=job_pvp] at @s run scoreboard players reset @s use.skill
 
 scoreboard players reset @a[scores={use.skill=1..}] use.skill
-
+tag @a[tag=action.sneaking] remove action.sneaking
+execute as @a[scores={sneaking=1..}] run tag @s add action.sneaking
+execute as @a[scores={sneaking=1..}] run scoreboard players reset @s sneaking
 execute if score repel state matches 1..1 run function minecraft:repel/main
 execute if score twolf.state state matches 1..1 run function minecraft:twolf/tick
 execute if score wolf.state state matches 1..1 run function minecraft:small_games/wolf/tick

@@ -906,4 +906,4 @@ execute as @s[scores={time=1923}] run function minecraft:tone/2-
 execute as @s[scores={time=1890}] run scoreboard players add @s music 1
 # execute as @s[scores={time=1924}] run title @s actionbar ["\u00a7a正在播放：\u00a7bKano"]
 
-execute as @s[scores={time=1924..}] run scoreboard players set @s time 0
+execute as @s[scores={time=1934..}] run scoreboard players set @s time 0
