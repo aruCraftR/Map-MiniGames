@@ -17,8 +17,8 @@ execute as @a[tag=REJOINGAME] run function lobby/rejoin
 scoreboard players reset @a[tag=REJOINGAME] rejoin
 tag @a[tag=REJOINGAME] remove REJOINGAME
 
-
 tag @a[scores={hub=1..}] add NEWENTER1
+execute as @a[tag=NEWENTER1] unless score @s park.uuid matches 0.. run function minecraft:npark/getuuid
 
 title @a[tag=NEWENTER1] reset
 execute as @a[scores={hub=1..}] run tellraw @a ["\u00a7a\u00a7l[MESSAGE] \u00a77",{"selector":"@s","color":"yellow"},"\u00a7b 返回了大厅。"]
@@ -51,11 +51,7 @@ gamemode adventure @a[tag=NEWENTER1]
 execute as @a[tag=NEWENTER1] at @s run attribute @s minecraft:generic.max_health base set 20
 
 clear @a[tag=NEWENTER1]
-tag @a[tag=NEWENTER1] remove sur.killedbyzom
-tag @a[tag=NEWENTER1] remove bw.play
-tag @a[tag=NEWENTER1] remove bw.player
-tag @a[tag=NEWENTER1] remove boat.notinboats
-tag @a[tag=NEWENTER1] remove play.total
+execute as @a[tag=NEWENTER1] at @s run function lobby/cleartags
 # execute as @a[tag=NEWENTER1] run function lobby/oneword
 tag @a[tag=NEWENTER1] remove NEWENTER1
 
