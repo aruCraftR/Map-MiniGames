@@ -275,6 +275,10 @@ def mode2():
     print(f'时间缩放系数(计算时将使用分数以确保精确度):{float(factor)} ({factor})')
     print(f'总tick数:{nbs.header.song_length} -> {round(factor * nbs.header.song_length)}')
     print('正在导出文件')
+    lost_note = False
+    distorted_pitch = False
+    note_count = 0
+    err_count = 0
     with open(f'{join(split(path)[0], splitext(path)[0])}.mcfunction', 'w') as f:
         for tick, chord in nbs:
             actual_tick=round(factor * tick)
@@ -284,11 +288,22 @@ def mode2():
                 instrument = instruments_list[note.instrument]
                 if available_key is None:
                     print(f'[没有转换规则] tick {tick} ({actual_tick}): {instrument}')
+                    lost_note = True
+                    err_count += 1
                     continue
                 if available_key != key:
                     print(f'[范围外音高转换] tick {tick} ({actual_tick}): <音色: {instrument}> {key} -> {available_key}')
+                    distorted_pitch = True
+                # if note.velocity  != 100:
+                #     print(f'[音符音量无法转换] tick {tick} ({actual_tick}): <音色: {instrument}> {note.velocity} -> 100 (1.20.2中才能对每个音符使用单独的音量)')
                 tone = f'{tone_path}/{instrument}/{tone_mapping[available_key]}'
                 f.write(HARDCORED_MUSIC_CMD_FORMAT.format(tick=actual_tick, tone=tone).replace('<', '{').replace('>', '}') + '\n')
+                note_count += 1
+    print(f'有{note_count}个音符转换到了mcfunction中, 有{err_count}个音符因为缺少必要信息而被跳过')
+    if lost_note:
+        print('\n警告: 由于转换规则缺失, 转换结果中丢失了部分音符\n')
+    if distorted_pitch:
+        print('\n警告: 由于音高超过转换范围, 转换结果中有部分音符出现音高变化\n')
     print('完成, 文件已保存到nbs文件同级目录中同名的.mcfunction文件中')
     system('pause')
 
